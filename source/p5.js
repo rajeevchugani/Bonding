@@ -149,14 +149,17 @@ function renderGiant(){
   $('gcmp').hidden=false; $('gcmp').innerHTML='<h3 style="margin-bottom:10px">Compare the structures</h3><div class="scroll"><table class="tbl"><thead><tr><th></th>'+GS.concat(EXTRA).map((s,i)=>'<th class="'+(i===gi?'sel':'')+'">'+s.name+(s.eg&&i>=GS.length?'<br><span class="progress">'+s.eg+'</span>':'')+'</th>').join('')+'</tr></thead><tbody>'
     +CMPROWS.map((r,k)=>'<tr><th>'+r+'</th>'+GS.concat(EXTRA).map((s,i)=>'<td class="'+(i===gi?'sel':'')+'">'+s.cmp[k]+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
 }
-const VIEWS=['practice','drag','giant','shapes','groups','alloys','quiz','exam','sheet'];
+const VIEWS=['practice','read','sort','drag','arr','groups','giant','shapes','alloys','circuit','quiz','exam','sheet'];
+const VGRP={practice:'p',read:'p',sort:'p',drag:'b',arr:'b',groups:'b',giant:'s',shapes:'s',alloys:'s',circuit:'s',quiz:'t',exam:'t',sheet:'t'}, GFIRST={p:'practice',b:'drag',s:'giant',t:'quiz'};
 function setView(v){ VIEWS.forEach(x=>{ const el=$(x); if(el) el.hidden=x!==v; });
   document.querySelectorAll('.view').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===v||(b.dataset.view==='quiz'&&v==='exam')));
   document.querySelectorAll('.tsw .tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.view===v));
-  const R={drag:renderDrag,giant:renderGiant,shapes:renderShapes,groups:renderGroups,alloys:renderAlloys,quiz:renderQuiz,exam:renderExam,sheet:renderSheet}[v]; if(R) R(); }
+  const g=VGRP[v]; document.querySelectorAll('.view[data-g]').forEach(b=>{ b.hidden=b.dataset.g!==g; }); document.querySelectorAll('.grp').forEach(b=>b.setAttribute('aria-selected',b.dataset.grp===g));
+  const R={drag:renderDrag,giant:renderGiant,shapes:renderShapes,groups:renderGroups,alloys:renderAlloys,quiz:renderQuiz,exam:renderExam,sheet:renderSheet,read:renderRead,sort:renderSort,arr:renderArr,circuit:renderCircuit}[v]; if(R) R(); }
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-view],[data-gs],[data-gm],[data-gv],[data-gx],[data-gq]'); if(!t) return;
-  if(t.dataset.view) setView(t.dataset.view);
+  const t=e.target.closest('[data-view],[data-grp],[data-gs],[data-gm],[data-gv],[data-gx],[data-gq]'); if(!t) return;
+  if(t.dataset.grp) setView(GFIRST[t.dataset.grp]);
+  else if(t.dataset.view) setView(t.dataset.view);
   else if(t.dataset.gs!==undefined){ gi=+t.dataset.gs; gshift=false; gview='top'; renderGiant(); }
   else if(t.dataset.gm){ gmode=t.dataset.gm; renderGiant(); }
   else if(t.dataset.gv){ gview=t.dataset.gv; renderGiant(); }

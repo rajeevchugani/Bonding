@@ -1,6 +1,6 @@
 
 /* ---------- Electron lab: drag the electrons ---------- */
-const DL={tab:'ionic',lvl:'guided',idx:{ionic:0,covalent:0,metallic:0},S:null,sel:-1,msg:'',drag:null,anim:0};
+const DL={q:true,tab:'ionic',lvl:'guided',idx:{ionic:0,covalent:0,metallic:0},S:null,sel:-1,msg:'',drag:null,anim:0};
 const DLIST=()=>({ionic:LIST.filter(p=>p.type==='ionic'),covalent:LIST.filter(p=>p.type==='covalent'),metallic:LIST.filter(p=>p.type==='metallic')}[DL.tab]);
 const easeIO=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -8,7 +8,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 /* ----- set up each kind of substance ----- */
 function dlInit(){
   cancelAnimationFrame(DL.anim); DL.gwhy=''; DL.sel=-1; DL.msg=''; DL.drag=null;
-  const P=DLIST()[DL.idx[DL.tab]]; const S={P,tok:[],done:false,t:0,gate:false,gwrong:[],gq:dlGate(DL.tab,P)};
+  const P=DLIST()[DL.idx[DL.tab]]; const S={P,tok:[],done:false,t:0,gate:(DL.lvl==='free'||!DL.q),gwrong:[],gq:dlGate(DL.tab,P)};
   if(DL.tab==='ionic'){
     const sc=ionScene(P,'atoms'); S.sc=sc; S.tgt=[];
     sc.slots.forEach(s=>{ if(s.target) S.tgt.push({x:s.x,y:s.y,f:-1}); else if(s.expect==='cross') S.tok.push({id:S.tok.length,kind:'cross',hx:s.x,hy:s.y,x:s.x,y:s.y,slot:-1}); });
@@ -57,7 +57,7 @@ function dlSVG(){
   const S=DL.S, P=S.P, live=!S.done&&!S.anim&&S.gate;
   if(DL.tab==='ionic'){
     if(S.done){ const sc=Object.assign({},S.fin,{slots:S.fin.slots.map(s=>Object.assign({},s,{fixed:true}))}); let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; sc.circles.forEach(c=>{x0=Math.min(x0,c.x-c.R-14);y0=Math.min(y0,c.y-c.R-16);x1=Math.max(x1,c.x+c.R+44);y1=Math.max(y1,c.y+c.R+14);}); return fitSVG(drawScene(sc,{label:'The ions that formed'}),x0,y0,x1-x0,y1-y0,'drsvg'); }
-    const sc=Object.assign({},S.sc,{slots:S.sc.slots.filter(s=>s.target).map((s,i)=>S.tgt[i].f<0?s:null).filter(Boolean).concat(S.sc.slots.filter(s=>!s.target&&s.expect!=='cross')),arrows:DL.lvl==='guided'&&S.tgt.some(t=>t.f<0)?S.sc.arrows:[]});
+    const free=DL.lvl==='free', sc=Object.assign({},S.sc,{slots:(free?[]:S.sc.slots.filter(s=>s.target).map((s,i)=>S.tgt[i].f<0?s:null).filter(Boolean)).concat(S.sc.slots.filter(s=>!s.target&&s.expect!=='cross')),arrows:!free&&DL.lvl==='guided'&&S.tgt.some(t=>t.f<0)?S.sc.arrows:[]});
     S.view=S.view||(()=>{ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; S.sc.circles.forEach(c=>{x0=Math.min(x0,c.x-c.R-18);y0=Math.min(y0,c.y-c.R-50);x1=Math.max(x1,c.x+c.R+18);y1=Math.max(y1,c.y+c.R+18);}); return [x0,y0,x1-x0,y1-y0]; })();
     return fitSVG(drawScene(sc,{label:'Atoms ready for electron transfer'}),...S.view,'drsvg').replace(/<\/svg>$/,S.tok.map(t=>tokHTML(S,t,live)).join('')+'</svg>');
   }
@@ -80,11 +80,12 @@ function dlSVG(){
 function dlInfo(){
   const S=DL.S, P=S.P, g=DL.lvl==='guided'; let h='';
   if(!S.done&&!S.gate) return dlGateCard();
+  if(DL.lvl==='free'&&DL.tab==='ionic') return dlFreeCard();
   const rem=S.tok.filter(k=>DL.tab==='ionic'?k.slot<0:DL.tab==='covalent'?!k.st:!k.sea).length;
   if(!S.done){
     if(DL.tab==='ionic'){
       const placed=S.tgt.filter(t=>t.f>=0).length;
-      h+='<p class="q">Drag the outer-shell electrons (red crosses) from the <b>'+EL[P.M].n+'</b> to the <b>'+EL[P.X].n+'</b> so every atom ends with a full outer shell.</p>'
+      h+='<p class="q">Drag the outer-shell electrons (pink crosses) from the <b>'+EL[P.M].n+'</b> to the <b>'+EL[P.X].n+'</b> so every atom ends with a full outer shell.</p>'
         +(g?'<div class="progressline"><b>'+placed+' of '+S.tgt.length+'</b> electrons transferred. Each '+EL[P.X].n+' atom needs <b>'+P.an+'</b> more electron'+(P.an>1?'s':'')+'.</div>':'<p class="note">Work out how many electrons each atom must lose or gain.</p>');
     } else if(DL.tab==='covalent'){
       const need=S.bonds.reduce((n,b)=>n+b.order*2,0), got=S.bonds.reduce((n,b)=>n+b.pairs.reduce((m,p)=>m+(p[0]>=0)+(p[1]>=0),0),0);
@@ -107,7 +108,7 @@ function dlInfo(){
 function renderDrag(){
   const S=DL.S||(dlInit(),DL.S); const T=[['ionic','Ionic: transfer'],['covalent','Covalent: share'],['metallic','Metallic: delocalise']];
   $('drctl').innerHTML='<div class="tabs"><b>Move the electrons</b><span class="spacer"></span>'+T.map(t=>'<button class="tab" aria-selected="'+(DL.tab===t[0])+'" data-dlt="'+t[0]+'">'+t[1]+'</button>').join('')
-    +'<span style="width:10px"></span><button class="tab" aria-selected="'+(DL.lvl==='guided')+'" data-dll="guided">Guided</button><button class="tab" aria-selected="'+(DL.lvl==='help')+'" data-dll="help">A little help</button><button class="tab" aria-selected="'+(DL.lvl==='challenge')+'" data-dll="challenge">Unguided</button></div><div class="chips">'
+    +'<span style="width:10px"></span><button class="tab" aria-selected="'+(DL.lvl==='guided')+'" data-dll="guided">Guided</button><button class="tab" aria-selected="'+(DL.lvl==='help')+'" data-dll="help">A little help</button><button class="tab" aria-selected="'+(DL.lvl==='challenge')+'" data-dll="challenge">Unguided</button><button class="tab" aria-selected="'+(DL.lvl==='free')+'" data-dll="free">Free play</button></div>'+(DL.lvl==='free'?'<p class="note" style="margin:0 0 10px">Free play: no questions and no marking. Drag the electrons wherever you like and see what happens.</p>':'<label class="note" style="display:flex;align-items:center;gap:8px;margin:0 0 10px"><input type="checkbox" data-dlq="1"'+(DL.q?' checked':'')+'> Answer questions before moving the electrons (turning this off restarts this substance)</label>')+'<div class="chips">'
     +DLIST().map((p,i)=>'<button class="chip" data-dls="'+i+'" aria-pressed="'+(i===DL.idx[DL.tab])+'"><span class="f">'+p.html+'</span><span class="n">'+p.name+'</span></button>').join('')+'</div>';
   dlPaint();
 }
@@ -122,6 +123,11 @@ function dlPaint(){
 function dlSvgPt(e){ const svg=$('drsvg'), pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; const q=pt.matrixTransform(svg.getScreenCTM().inverse()); return [q.x,q.y]; }
 function dlTry(id,px,py){
   const S=DL.S, tk=S.tok[id], P=S.P; DL.msg='';
+  if(DL.tab==='ionic'&&DL.lvl==='free'){
+    if(tk.slot>=0){ S.tgt[tk.slot].f=-1; tk.slot=-1; }
+    const v=S.view; if(v){ px=Math.min(v[0]+v[2]-10,Math.max(v[0]+10,px)); py=Math.min(v[1]+v[3]-10,Math.max(v[1]+10,py)); }
+    tk.x=px; tk.y=py; S.chgres={}; return;
+  }
   if(DL.tab==='ionic'){
     if(tk.slot>=0){ S.tgt[tk.slot].f=-1; tk.slot=-1; tk.x=tk.hx; tk.y=tk.hy; }
     let best=-1,bd=30; S.tgt.forEach((t,i)=>{ if(t.f<0){ const d=Math.hypot(t.x-px,t.y-py); if(d<bd){bd=d;best=i;} } });
@@ -180,16 +186,19 @@ document.addEventListener('pointerup',e=>{
 });
 document.addEventListener('click',e=>{
   const sv=e.target.closest('#drsvg'); if(sv&&!e.target.closest('[data-tok]')&&DL.sel>=0&&DL.S&&!DL.S.done){ const [px,py]=dlSvgPt(e), id=DL.sel; DL.sel=-1; dlTry(id,px,py); dlPaint(); return; }
-  const t=e.target.closest('[data-dlt],[data-dll],[data-dls],[data-dlx],[data-dlg]'); if(!t) return;
+  const t=e.target.closest('[data-dlt],[data-dll],[data-dls],[data-dlx],[data-dlg],[data-dlq]'); if(!t) return;
   if(t.dataset.dlg!==undefined){ const S=DL.S, q=S.gq; if(t.dataset.dlg==='check'){ const pl=dlPlan(S), v=S.plan||(S.plan={v:[],bad:[],tries:0}); v.bad=[]; pl.f.forEach((f,i)=>{ const el=document.querySelector('[data-dlp="'+i+'"]'); v.v[i]=el?el.value.trim():''; if(parseInt(v.v[i],10)!==f.a||!/^\d+$/.test(v.v[i])) v.bad.push(i); }); v.tries++; if(!v.bad.length){ S.gate=true; v.tries=0; DL.gwhy='Your plan works. '+pl.sum; } }
     else if(t.dataset.dlg==='skip'){ S.gate=true; } else { const k=+t.dataset.dlg; if(q.o[k]===q.right){ S.gate=true; DL.gwhy=q.why; } else if(!S.gwrong.includes(k)) S.gwrong.push(k); } dlPaint(); return; }
   if(t.dataset.dlt){ DL.tab=t.dataset.dlt; dlInit(); renderDrag(); }
-  else if(t.dataset.dll){ DL.lvl=t.dataset.dll; DL.S.view=null; renderDrag(); }
+  else if(t.dataset.dll){ const was=DL.lvl; DL.lvl=t.dataset.dll; if(was==='free'||DL.lvl==='free'){ dlInit(); } else DL.S.view=null; renderDrag(); }
+  else if(t.dataset.dlq){ DL.q=!!t.checked; dlInit(); renderDrag(); }
   else if(t.dataset.dls!==undefined){ DL.idx[DL.tab]=+t.dataset.dls; dlInit(); renderDrag(); }
   else if(t.dataset.dlx==='reset') dlReset();
   else if(t.dataset.dlx==='next'){ DL.idx[DL.tab]=(DL.idx[DL.tab]+1)%DLIST().length; dlInit(); renderDrag(); }
   else if(t.dataset.dlx==='help'){ dlHelp(); dlPaint(); }
+  else if(t.dataset.dlx==='chg'){ const S=DL.S; S.chgres={}; Object.keys(S.want||{}).forEach(i=>{ S.chgres[i]=dlParseCharge(S.chg&&S.chg[i])===S.want[i]; }); dlPaint(); }
 });
+document.addEventListener('input',e=>{ const t=e.target; if(t&&t.dataset&&t.dataset.dlc!==undefined&&DL.S){ DL.S.chg=DL.S.chg||{}; DL.S.chg[t.dataset.dlc]=t.value; } });
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter'&&e.key!==' ') return; const g=e.target.closest&&e.target.closest('[data-tok]'); if(!g||!DL.S||DL.S.done) return;
   e.preventDefault(); const id=+g.dataset.tok; DL.sel=DL.sel===id?-1:id; dlPaint();
@@ -243,6 +252,27 @@ function dlPlan(S){
     {l:'Electrons each atom releases into the sea',a:ve(P.M),h:'Metal atoms release all of their outer electrons.'},
     {l:'Electrons delocalised from the '+S.atoms.length+' atoms shown',a:S.tok.length,h:'Atoms shown × electrons released by each atom.'}],
     sum:'Each atom releases '+ve(P.M)+', so '+S.tok.length+' electrons are delocalised from the atoms shown.'};
+}
+function dlParseCharge(t){
+  t=String(t||'').replace(/\s+/g,'').replace(/[\u2212\u2013\u2014]/g,'-').toLowerCase(); if(!t) return NaN;
+  if(t==='0'||t==='neutral'||t==='none') return 0;
+  let m=t.match(/^(\d*)([+-])$/); if(m) return (m[2]==='-'?-1:1)*(m[1]===''?1:+m[1]);
+  m=t.match(/^([+-])(\d*)$/); if(m) return (m[1]==='-'?-1:1)*(m[2]===''?1:+m[2]);
+  return NaN;
+}
+function dlChgRow(i,res,lab){
+  const S=DL.S, v=(S.chg&&S.chg[i])||'';
+  return '<div class="fld" style="margin-top:6px"><span>Charge on this '+lab+' ion</span><input type="text" data-dlc="'+i+'" value="'+v.replace(/"/g,'&quot;')+'" placeholder="e.g. 2+" autocomplete="off" spellcheck="false" aria-label="Charge on the '+lab+' atom or ion"'+(res===true?' class="ok"':res===false?' class="bad"':'')+'>'
+   +(res===true?'<span class="msg ok" style="margin:0">Correct</span>':res===false?'<span class="msg bad" style="margin:0">Not quite. Count the electrons lost or gained.</span>':'')+'</div>';
+}
+function dlFreeCard(){
+  const S=DL.S, P=S.P, C=S.sc.circles, own=C.map(()=>0), near=C.map(()=>0); let loose=0;
+  S.tok.forEach(t=>{ let h=0,hd=1e9; C.forEach((c,i)=>{ const d=Math.hypot(c.x-t.hx,c.y-t.hy); if(d<hd){hd=d;h=i;} }); own[h]++;
+    let at=-1; C.forEach((c,i)=>{ if(Math.hypot(c.x-t.x,c.y-t.y)<c.R+16) at=i; }); if(at>=0) near[at]++; else loose++; });
+  S.chg=S.chg||{}; S.chgres=S.chgres||{}; const lines=[]; C.forEach((c,i)=>{ const isM=c.label===P.M; if(!isM&&c.label!==P.X) return; const want=isM?own[i]-near[i]:-near[i]; S.want=S.want||{}; S.want[i]=want; const res=S.chgres[i];
+    if(isM){ const ch=own[i]-near[i], full=near[i]===0; lines.push('<div style="margin-bottom:12px"><p><b>'+c.label+'</b> (metal): '+near[i]+' of its '+own[i]+' outer electrons left'+(ch? ' &rarr; charge <b>'+(ch>0?ch+'+':(-ch)+'\u2212')+'</b>':' &rarr; neutral')+(full&&ch>0?' <span class="msg ok" style="margin:0">Full shell underneath</span>':'')+'</p>'+dlChgRow(i,res,c.label)+'</div>'); }
+    else { const tot=EL[P.X].ve+near[i], ch=near[i]; lines.push('<div style="margin-bottom:12px"><p><b>'+c.label+'</b> (non-metal): '+tot+' outer electrons'+(ch?' &rarr; charge <b>'+ch+'\u2212</b>':' &rarr; neutral')+(tot===8?' <span class="msg ok" style="margin:0">Full shell</span>':'')+'</p>'+dlChgRow(i,res,c.label)+'</div>'); } });
+  return '<div class="card"><div class="probhead"><h2>'+cap(P.name)+'</h2><span class="f">'+P.html+'</span></div><p class="q">Drag the pink-cross electrons anywhere you like. Try giving them all to one atom, leaving them on the metal, or splitting them up.</p><div class="explain">'+lines.join('')+(loose?'<p class="note">'+loose+' electron'+(loose>1?'s are':' is')+' not on any atom.</p>':'')+'</div><p class="note">The correct answer: each '+EL[P.M].n+' atom loses '+P.cm+' and each '+EL[P.X].n+' atom gains '+P.an+'. Can you make it?</p><div class="actions"><button class="btn" data-dlx="chg">Check my charges</button><button class="btn ghost" data-dlx="reset">Start again</button></div></div>';
 }
 function dlGateCard(){
   const S=DL.S, P=S.P, head='<div class="probhead"><h2>'+cap(P.name)+'</h2><span class="f">'+P.html+'</span></div>';

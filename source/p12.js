@@ -10,7 +10,7 @@ function gbSteps(co){
   const P=gbP(co), M=EL[P.M].n, X=EL[P.X].n, ve=EL[P.X].ve;
   return [
     {t:'1. Start with the atoms',x:'A '+M+' atom has <b>'+P.cm+'</b> outer electron'+(P.cm>1?'s':'')+' (red ×). A '+X+' atom has <b>'+ve+'</b> (blue •) and needs <b>'+P.an+'</b> more to have a full outer shell of 8.',sc:ionScene(P,'atoms'),arrows:false},
-    {t:'2. Transfer the electrons',x:'The metal gives its outer electron'+(P.cm>1?'s':'')+' to the non-metal. These <b>red crosses come from the metal</b> and land on the '+X+'. Each '+M+' atom loses '+P.cm+' and each '+X+' atom gains '+P.an+'.',sc:ionScene(P,'atoms'),arrows:true},
+    {t:'2. Transfer the electrons',x:'The metal gives its outer electron'+(P.cm>1?'s':'')+' to the non-metal. These <b>pink crosses come from the metal</b> and land on the '+X+'. Each '+M+' atom loses '+P.cm+' and each '+X+' atom gains '+P.an+'.',sc:ionScene(P,'atoms'),arrows:true},
     {t:'3. Ions with full outer shells',x:'The '+M+' atom is now <b>'+P.M+'<sup>'+chargeText(P.cm,'+')+'</sup></b> (it lost negative electrons, so it is positive). The '+X+' atom is now <b>'+P.X+'<sup>'+chargeText(P.an,'-')+'</sup></b>. The brackets show the charge belongs to the whole ion.',sc:ionScene(P,'final'),arrows:false},
     {t:'4. Balance the charges',x:'Opposite charges attract. This electrostatic attraction is the <b>ionic bond</b>. To balance: '+P.a+' × ('+chargeText(P.cm,'+')+') and '+P.b+' × ('+chargeText(P.an,'-')+'), so the formula is <b>'+P.html+'</b>.',sc:ionScene(P,'final'),arrows:false}
   ];

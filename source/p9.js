@@ -2,7 +2,7 @@
 /* ---------- Electron diagrams for the ions in group-ion compounds ---------- */
 const GB1=['cross','dot'], GBD=['cross','cross'];
 const GSPEC={
-  OH:{s:'O',own:6,gain:1,outer:[{s:'H',own:1,ang:0,bonds:[GB1]}],note:'One covalent bond between O and H. The ringed red × is the electron gained from the metal, which makes the ion 1−.'},
+  OH:{s:'O',own:6,gain:1,outer:[{s:'H',own:1,ang:0,bonds:[GB1]}],note:'One covalent bond between O and H. The ringed pink × is the electron gained from the metal, which makes the ion 1−.'},
   NH4:{s:'N',own:5,gain:0,outer:[{s:'H',own:1,ang:225,bonds:[GB1]},{s:'H',own:1,ang:315,bonds:[GB1]},{s:'H',own:1,ang:135,bonds:[GB1]},{s:'H',own:0,ang:45,bonds:[GBD]}],note:'Four covalent bonds. In one of them both electrons come from nitrogen, and the hydrogen ion has none, so the ion is 1+.'},
   NO3:{s:'N',own:5,gain:0,outer:[{s:'O',own:6,ang:270,bonds:[GB1,GB1]},{s:'O',own:6,ang:30,bonds:[GB1],gain:1},{s:'O',own:6,ang:150,bonds:[GBD]}],note:'Covalent bonds inside the ion. The electron gained from the metal makes the ion 1−.'},
   CO3:{s:'C',own:4,gain:0,outer:[{s:'O',own:6,ang:270,bonds:[GB1,GB1]},{s:'O',own:6,ang:30,bonds:[GB1],gain:1},{s:'O',own:6,ang:150,bonds:[GB1],gain:1}],note:'Covalent bonds inside the ion. The two electrons gained from the metal make the ion 2−.'},
@@ -50,7 +50,7 @@ function ionFig(ion,n){
 function ionsRow(co){
   const a=ionFig(co.c,co.nc), b=ionFig(co.a,co.na), kinds=new Set([...a.kinds,...b.kinds]);
   const lg=[]; if(kinds.has('cross')) lg.push({t:'cross',txt:'metal or central atom'}); if(kinds.has('dot')) lg.push({t:'dot',txt:'non-metal or outer atom'}); if(kinds.has('gain')) lg.push({t:'gain',txt:'electron gained from the metal (ringed)'});
-  const tr=(a.simple&&b.simple&&!co.c.poly)?'<p class="note" style="border-left:3px solid var(--cross);padding-left:8px"><b>Where the electrons come from:</b> each '+co.c.name.replace(/\(.*\)/,'')+' atom loses '+co.c.q+' electron'+(co.c.q>1?'s':'')+' and becomes '+ionLabel(co.c)+'. The negative ion gains these electrons. They are drawn as <b>ringed red crosses</b> because they come from the metal. In total '+(co.c.q*co.nc)+' electron'+(co.c.q*co.nc>1?'s are':' is')+' transferred.</p>':'';
+  const tr=(a.simple&&b.simple&&!co.c.poly)?'<p class="note" style="border-left:3px solid var(--cross);padding-left:8px"><b>Where the electrons come from:</b> each '+co.c.name.replace(/\(.*\)/,'')+' atom loses '+co.c.q+' electron'+(co.c.q>1?'s':'')+' and becomes '+ionLabel(co.c)+'. The negative ion gains these electrons. They are drawn as <b>ringed pink crosses</b> because they come from the metal. In total '+(co.c.q*co.nc)+' electron'+(co.c.q*co.nc>1?'s are':' is')+' transferred.</p>':'';
   const notes=tr+[a.note,b.note].filter(Boolean).map(n=>'<p class="note">'+n+'</p>').join('');
   return '<div class="ionrow">'+a.html+'<span class="ionplus">+</span>'+b.html+'</div><div class="legend" style="justify-content:center">'+legendHTML({legend:lg})+'</div>'+notes+'<p class="note">The brackets show the ion is one particle with an overall charge. The formula has '+co.nc+' of the positive ion and '+co.na+' of the negative ion'+(((co.c.poly&&co.nc>1)||(co.a.poly&&co.na>1))?', so group ions get brackets with the number outside.':'.')+'</p>';
 }
