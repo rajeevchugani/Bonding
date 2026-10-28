@@ -37,7 +37,6 @@ Bonding Lab is a place to practise ionic, covalent and metallic bonding, includi
 
 ## Teacher notes
 
-- **Present mode** (top right) enlarges everything for the board.
 - **Whole-class quiz:** *Test yourself > Quick quiz* has options for a timed round, a big-screen display and weak-topic focus.
 - **Written paper:** choose the number of questions, time allowed and bonding types. *Print a paper and mark scheme* makes a paper and answer key to hand out.
 - **Revision sheet:** one version with answers (for you) and one with blanks (for students), both printable.

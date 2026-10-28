@@ -2149,7 +2149,7 @@ function exPrint(){
   +'#examprint{display:none}@media print{body.printexam .wrap,body.printexam #ptbtn,body.printexam #ptp{display:none!important}body.printexam #examprint{display:block;color:#111;background:#fff;padding:10mm;font:14px/1.5 sans-serif}.expq{break-inside:avoid;margin-bottom:16px}.exbreak{break-before:page}.exprd svg{width:340px!important;max-width:100%}#prbtn{display:none!important}}';
   document.head.appendChild(css);
   const hd=document.querySelector('header'); if(hd){ hd.style.position='relative'; const b=document.createElement('button'); b.id='prbtn'; b.className='hbtn'; b.type='button'; b.setAttribute('aria-pressed','false'); b.textContent='Present mode'; b.title='Bigger display for projecting. Hides hints and show-answer buttons.';
-    b.addEventListener('click',()=>{ const on=!document.body.classList.contains('present'); document.body.classList.toggle('present',on); b.setAttribute('aria-pressed',String(on)); b.textContent=on?'Present mode: on':'Present mode'; }); (document.getElementById('hbtns')||hd).appendChild(b); }
+    b.addEventListener('click',()=>{ const on=!document.body.classList.contains('present'); document.body.classList.toggle('present',on); b.setAttribute('aria-pressed',String(on)); b.textContent=on?'Present mode: on':'Present mode'; }); /* Present mode button removed: not needed */ }
 })();
 /* ---------- Light / dark theme switch (dark is the default) ---------- */
 (function(){
